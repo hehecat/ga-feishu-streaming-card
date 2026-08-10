@@ -260,7 +260,7 @@ def _safe_render_session(session: Any) -> Optional[CardSession]:
 # 注意：飞书 1.0 卡片 **column_set 内不允许 action 组件**（实测 200410
 # "action components are not allowed in the column"），故 2×2 采用两个
 # action 容器（每容器一行横排 2 按钮）+ **固定短文案**（杜绝长文案撑宽换行竖排）。
-# 行1: 新会话 + 切换模型（固定短文案，当前模型名见 footer meta）；
+# 行1: 新会话 + 停止（/stop 停止当前任务，GA 原生命令；切换模型移入设置卡行2）；
 # 行2: 设置（二级菜单卡）+ 状态（GA /status）。回调一律经宿主白名单校验后回灌。
 _COMMAND_BUTTONS_ROW2: Tuple[Tuple[str, str], ...] = (
     ("/settings", "设置"),
@@ -284,13 +284,13 @@ def _command_buttons_element(current_model: Optional[str] = None) -> List[Dict[s
     2 行×2 列横排稳定，实测通过）。
 
     - 两行 column_set，每行两列（width=weighted, weight=1），每列一个 button 块；
-    - 固定短文案（新会话/切换模型/设置/状态），/model 不注入模型名（防长名换行），
-      当前模型名由卡片底部 meta 行承载；current_model 参数保留仅为签名兼容；
+    - 固定短文案（新会话/停止/设置/状态），/model 不注入模型名（防长名换行），
+      切换模型入口在设置二级菜单卡；current_model 参数保留仅为签名兼容；
     - 2.0 卡片中 button 是块级元素，可直接放 column.elements（实测通过）。
     value 一律 T11 协议（hfc=1 + action），回调由宿主白名单校验后回灌。
     """
     rows = [
-        [("新会话", "/new"), ("切换模型", "/model")],
+        [("新会话", "/new"), ("停止", "/stop")],
         [(label, cmd) for cmd, label in _COMMAND_BUTTONS_ROW2],
     ]
     return [
@@ -318,7 +318,7 @@ def _command_buttons_element(current_model: Optional[str] = None) -> List[Dict[s
 
 
 def render_settings_menu_card() -> Dict[str, Any]:
-    """设置二级菜单卡：goal hive 入口 / 帮助 / 关于（2.0 每按钮独占一行，竖排一列）。"""
+    """设置二级菜单卡：切换模型 / goal hive 入口 / 帮助 / 关于（2.0 每按钮独占一行，竖排一列）。"""
     return {
         "schema": "2.0",
         "config": {"wide_screen_mode": True},
@@ -328,7 +328,7 @@ def render_settings_menu_card() -> Dict[str, Any]:
         },
         "body": {
             "elements": [
-                # T27-G7: 3 个按钮一行太挤看不清 → 每按钮一个 column_set 独占整行
+                # T27-G7: 每按钮一个 column_set 独占整行（3 个一行太挤看不清）
                 {
                     "tag": "column_set",
                     "columns": [
@@ -341,6 +341,7 @@ def render_settings_menu_card() -> Dict[str, Any]:
                     ],
                 }
                 for label, cmd in [
+                    ("⚙️ 切换模型", "/model"),
                     ("🎯 Goal Hive", "/goal_hive"),
                     ("📖 帮助", "/help"),
                     ("ℹ️ 关于", "/about"),
