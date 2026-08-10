@@ -1,0 +1,24 @@
+# hfc（GA → 飞书流式卡片桥）示例配置
+# 实际运行时配置为 GA 根目录 .hfc_config.json（由 `hfc install` 生成），
+# 引擎侧 YAML 配置参考本文件字段。
+enabled: true
+transport: fake            # fake=离线测试 | http=真实飞书（预留，默认不启用）
+http:
+  base_url: "https://open.feishu.cn"
+  timeout_ms: 800
+delivery:
+  default: card
+  native_chats: []         # 支持通配 *?[]
+limits:
+  retention_seconds: 3600
+  zombie_grace_seconds: 120
+  history_limit: 50
+card_limits:
+  max_elements: 200
+  max_tables: 5
+  safe_bytes: 28000
+# 增量合并（coalescing）：桥分发循环按时间/字符阈值聚合增量后冲刷；0 表示禁用（逐事件直发）
+coalesce:
+  delta_ms: 250
+  delta_chars: 600
+  max_pending: 128
