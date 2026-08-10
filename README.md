@@ -1,5 +1,11 @@
 # GA Feishu Streaming Card — 飞书流式卡片桥（开源版）
 
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](ga-feishu-streaming-card/LICENSE)
+[![Python](https://img.shields.io/badge/python-3.10%2B-blue.svg)](ga-feishu-streaming-card/pyproject.toml)
+[![Version](https://img.shields.io/badge/version-0.1.0-green.svg)](ga-feishu-streaming-card/CHANGELOG.md)
+[![GitHub stars](https://img.shields.io/github/stars/hehecat/ga-feishu-streaming-card.svg?style=social)](https://github.com/hehecat/ga-feishu-streaming-card)
+[![GitHub issues](https://img.shields.io/github/issues/hehecat/ga-feishu-streaming-card.svg)](https://github.com/hehecat/ga-feishu-streaming-card/issues)
+
 将 LLM 流式输出实时渲染为飞书交互卡片的 Python 桥接组件，含模型切换下拉、2×2 按钮布局、Goal Hive 状态入口等实战打磨功能。
 
 ## 仓库结构
