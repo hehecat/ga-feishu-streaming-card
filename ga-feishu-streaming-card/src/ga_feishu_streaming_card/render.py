@@ -367,6 +367,67 @@ def render_plain_info_card(title: str, body: str) -> Dict[str, Any]:
     }
 
 
+def render_goal_hive_card(tasks: list[dict], title: str = "Goal Hive 协作进行中") -> Dict[str, Any]:
+    """Goal Hive 结构化状态卡（G14，用户验收 V4+最近动态 版）。
+
+    tasks: [{port, status_cn, emoji, objective, turns, max_turns, latest}]
+    每任务块（已实测飞书 2.0 可用元素约束下最规整版式）：
+      - 头行：`**port {port}**　|　{emoji} {status_cn}`（粗体端口 + 竖线 + 状态）
+      - 任务行：一句话目标（截断由宿主负责）
+      - 进度行：8 格字符隐式进度条（▓░，飞书无 progress 元素）+ `　|　x/y`
+      - 可选最近动态行：`最近：{latest}`（仅进行中任务，BBS 最新帖）
+      任务间 hr 分隔。
+    空 tasks → 空态提示文本卡（与旧行为一致）。
+    """
+    if not tasks:
+        return render_plain_info_card(
+            title, "当前无进行中协作任务 🏝\n需要时告诉我目标，我会启动 Hive 多 worker 协作。"
+        )
+
+    def _bar(cur: int, total: int, n: int = 8) -> str:
+        filled = min(n, max(0, round(cur / total * n))) if total else 0
+        return "▓" * filled + "░" * (n - filled)
+
+    elements: list[Dict[str, Any]] = []
+    for i, t in enumerate(tasks):
+        port = t.get("port", "?")
+        status_cn = str(t.get("status_cn", "未知"))
+        emoji = str(t.get("emoji", "●"))
+        objective = str(t.get("objective", "目标未知")).strip()
+        turns, maxt = t.get("turns"), t.get("max_turns")
+        elements.append(
+            {
+                "tag": "div",
+                "text": {"tag": "lark_md", "content": html_escape_card_text(f"**port {port}**　|　{emoji} {status_cn}")},
+            }
+        )
+        elements.append({"tag": "div", "text": {"tag": "lark_md", "content": html_escape_card_text(objective)}})
+        if isinstance(turns, int) and isinstance(maxt, int) and maxt > 0:
+            elements.append(
+                {
+                    "tag": "div",
+                    "text": {"tag": "lark_md", "content": html_escape_card_text(f"{_bar(turns, maxt)}　|　{turns}/{maxt}")},
+                }
+            )
+        latest = t.get("latest")
+        if latest:
+            elements.append(
+                {"tag": "div", "text": {"tag": "lark_md", "content": html_escape_card_text(f"最近：{latest}")}}
+            )
+        if i < len(tasks) - 1:
+            elements.append({"tag": "hr"})
+
+    return {
+        "schema": "2.0",
+        "config": {"wide_screen_mode": True},
+        "header": {
+            "template": "blue",
+            "title": {"tag": "plain_text", "content": html_escape_card_text(f"{title}（{len(tasks)} 个）")},
+        },
+        "body": {"elements": elements},
+    }
+
+
 def _interaction_buttons_element(pending: Sequence[Any]) -> Dict[str, Any]:
     """pending 交互按钮行：每个交互一个按钮，value 携带交互 key（2.0 column_set 横排）。"""
     btns = [_button_element(it.id, it.id) for it in pending if getattr(it, "id", "")]
